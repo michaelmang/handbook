@@ -85,6 +85,7 @@ function updateProjectInList(
   );
 }
 
+
 export const useProjectsStore = create<ProjectsState>()(
   persist(
     (set, get) => ({
@@ -318,5 +319,10 @@ export const useProjectsStore = create<ProjectsState>()(
     }
   )
 );
+
+/** Stable project selector — avoids re-running migrateProject on every snapshot read. */
+export function useProject(projectId: string): Project | undefined {
+  return useProjectsStore((s) => s.projects.find((p) => p.id === projectId));
+}
 
 export { splitMarkdownByHeadings };

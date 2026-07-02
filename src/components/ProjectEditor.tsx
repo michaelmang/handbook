@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useProjectsStore } from "@/lib/store";
+import { useProject, useProjectsStore } from "@/lib/store";
 import { OrganizePanel } from "@/components/OrganizePanel";
 import { StylePanel } from "@/components/StylePanel";
 import { PreviewPanel } from "@/components/PreviewPanel";
@@ -24,12 +24,13 @@ interface ProjectEditorProps {
 
 export function ProjectEditor({ projectId }: ProjectEditorProps) {
   const router = useRouter();
-  const { getProject, setActiveProject, updateProject } = useProjectsStore();
+  const setActiveProject = useProjectsStore((s) => s.setActiveProject);
+  const updateProject = useProjectsStore((s) => s.updateProject);
   const [activeTab, setActiveTab] = useState<Tab>("organize");
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
 
-  const project = getProject(projectId);
+  const project = useProject(projectId);
 
   useEffect(() => {
     setActiveProject(projectId);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useProjectsStore } from "@/lib/store";
+import { useProject, useProjectsStore } from "@/lib/store";
 import { downloadExport } from "@/lib/export/client";
 
 interface ExportPanelProps {
@@ -9,7 +9,7 @@ interface ExportPanelProps {
 }
 
 export function ExportPanel({ projectId }: ExportPanelProps) {
-  const project = useProjectsStore((s) => s.getProject(projectId));
+  const project = useProject(projectId);
   const exportProjectJson = useProjectsStore((s) => s.exportProjectJson);
   const importProjectJson = useProjectsStore((s) => s.importProjectJson);
   const [loading, setLoading] = useState<"pdf" | "docx" | null>(null);

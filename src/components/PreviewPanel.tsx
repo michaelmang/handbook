@@ -1,8 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useProjectsStore } from "@/lib/store";
+import { useProject } from "@/lib/store";
 import { TEMPLATES } from "@/lib/templates";
 import { organizeProject } from "@/lib/project-utils";
 import { isContainerSection, headingLevelForDepth } from "@/lib/section-tree";
@@ -15,12 +16,15 @@ interface PreviewPanelProps {
 const HEADING_SIZES = ["28pt", "22pt", "18pt", "16pt", "14pt", "13pt"];
 
 export function PreviewPanel({ projectId }: PreviewPanelProps) {
-  const project = useProjectsStore((s) => s.getProject(projectId));
+  const project = useProject(projectId);
+  const items = useMemo(
+    () => (project ? organizeProject(project, { includedOnly: true }) : []),
+    [project]
+  );
 
   if (!project) return null;
 
   const template = TEMPLATES[project.templateId];
-  const items = organizeProject(project, { includedOnly: true });
   const { schoolName, logoDataUrl, accentColor, coverPageText } =
     project.branding;
 

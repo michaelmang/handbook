@@ -17,7 +17,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useProjectsStore } from "@/lib/store";
+import { useProject, useProjectsStore } from "@/lib/store";
 import type { Section } from "@/lib/types";
 import { organizeProject } from "@/lib/project-utils";
 import { isContainerSection, moveBlockInFlatList } from "@/lib/section-tree";
@@ -29,17 +29,15 @@ interface OrganizePanelProps {
 
 export function OrganizePanel({ projectId }: OrganizePanelProps) {
   const {
-    getProject,
     addContainerSection,
     updateSection,
     deleteSection,
-    duplicateSection,
     applyFlatStructure,
     indentSection,
     outdentSection,
   } = useProjectsStore();
 
-  const project = getProject(projectId);
+  const project = useProject(projectId);
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [newGroupTitle, setNewGroupTitle] = useState("");
   const [showAddGroup, setShowAddGroup] = useState(false);
@@ -161,9 +159,6 @@ export function OrganizePanel({ projectId }: OrganizePanelProps) {
                         included: !item.section.included,
                       })
                     }
-                    onDuplicate={() =>
-                      duplicateSection(projectId, item.section.id)
-                    }
                     onDelete={() => {
                       const label = isContainerSection(item.section)
                         ? "group"
@@ -210,7 +205,6 @@ function SortableSectionRow({
   item,
   onEdit,
   onToggleIncluded,
-  onDuplicate,
   onDelete,
   onIndent,
   onOutdent,
@@ -219,7 +213,6 @@ function SortableSectionRow({
   item: { section: Section; depth: number; number: string };
   onEdit: () => void;
   onToggleIncluded: () => void;
-  onDuplicate: () => void;
   onDelete: () => void;
   onIndent: () => void;
   onOutdent: () => void;
@@ -314,13 +307,6 @@ function SortableSectionRow({
           title={section.included ? "Exclude from export" : "Include in export"}
         >
           {section.included ? "✓" : "○"}
-        </button>
-        <button
-          onClick={onDuplicate}
-          className="rounded px-1.5 py-1 text-xs text-stone-500 hover:bg-stone-200/60"
-          title="Duplicate"
-        >
-          ⧉
         </button>
         <button
           onClick={onDelete}
