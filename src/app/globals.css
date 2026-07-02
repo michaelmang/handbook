@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fafaf9;
+  --foreground: #1c1917;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
+  --font-serif: var(--font-libre-baskerville), Georgia, serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Handbook preview prose styles */
+.prose-handbook h1 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--accent, #1e3a5f);
+  margin: 1.25rem 0 0.5rem;
+}
+
+.prose-handbook h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 1rem 0 0.5rem;
+}
+
+.prose-handbook h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #444;
+  margin: 0.75rem 0 0.35rem;
+}
+
+.prose-handbook p {
+  margin: 0 0 0.75rem;
+}
+
+.prose-handbook ul,
+.prose-handbook ol {
+  margin: 0 0 0.75rem;
+  padding-left: 1.5rem;
+}
+
+.prose-handbook li {
+  margin-bottom: 0.25rem;
+}
+
+.prose-handbook table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+}
+
+.prose-handbook th,
+.prose-handbook td {
+  border: 1px solid #d6d3d1;
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+}
+
+.prose-handbook th {
+  background: #f5f5f4;
+  font-weight: 600;
+}
+
+.prose-handbook blockquote {
+  border-left: 3px solid var(--accent, #1e3a5f);
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  color: #57534e;
+  background: #fafaf9;
+}
+
+.prose-handbook code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.875em;
+  background: #f5f5f4;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+}
+
+.prose-handbook pre {
+  background: #f5f5f4;
+  padding: 1rem;
+  overflow-x: auto;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+}
+
+.prose-handbook pre code {
+  background: none;
+  padding: 0;
+}
+
+.prose-handbook strong {
+  font-weight: 700;
+}
+
+.prose-handbook a {
+  color: var(--accent, #1e3a5f);
+  text-decoration: underline;
+}
