@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { useProjectsStore } from "@/lib/store";
+import { useProject, useProjectsStore } from "@/lib/store";
 import { TEMPLATE_LIST, DEFAULT_ACCENT_COLORS } from "@/lib/templates";
 import type { TemplateId } from "@/lib/types";
 
@@ -10,9 +10,9 @@ interface StylePanelProps {
 }
 
 export function StylePanel({ projectId }: StylePanelProps) {
-  const { getProject, updateProject } = useProjectsStore();
+  const updateProject = useProjectsStore((s) => s.updateProject);
   const logoInputRef = useRef<HTMLInputElement>(null);
-  const project = getProject(projectId);
+  const project = useProject(projectId);
 
   if (!project) return null;
 
