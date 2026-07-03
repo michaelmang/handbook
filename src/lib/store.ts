@@ -18,6 +18,7 @@ import {
   type FlatSectionItem,
 } from "./section-tree";
 import { splitMarkdownByHeadings } from "./markdown";
+import type { MarkdownBlock } from "./markdown-split";
 
 interface ProjectsState {
   projects: Project[];
@@ -39,6 +40,11 @@ interface ProjectsState {
     markdown: string,
     parentId?: string | null
   ) => void;
+  addSectionsFromBlocks: (
+    projectId: string,
+    blocks: MarkdownBlock[],
+    parentId?: string | null
+  ) => void;
   addContainerSection: (
     projectId: string,
     title: string,
@@ -55,6 +61,7 @@ interface ProjectsState {
     >
   ) => void;
   deleteSection: (projectId: string, sectionId: string) => void;
+  deleteSections: (projectId: string, sectionIds: string[]) => void;
   duplicateSection: (projectId: string, sectionId: string) => void;
   applyFlatStructure: (
     projectId: string,
@@ -160,6 +167,20 @@ export const useProjectsStore = create<ProjectsState>()(
         }));
       },
 
+      addSectionsFromBlocks: (projectId, blocks, parentId = null) => {
+        set((state) => ({
+          projects: updateProjectInList(state.projects, projectId, (p) => {
+            const startOrder = getNextOrderIndex(p.sections, parentId);
+            const newSections = sectionsFromMarkdownBlocks(
+              blocks,
+              parentId,
+              startOrder
+            );
+            return { ...p, sections: [...p.sections, ...newSections] };
+          }),
+        }));
+      },
+
       addContainerSection: (projectId, title, parentId = null) => {
         set((state) => ({
           projects: updateProjectInList(state.projects, projectId, (p) => {
@@ -188,6 +209,25 @@ export const useProjectsStore = create<ProjectsState>()(
               sectionId,
               ...getDescendantIds(p.sections, sectionId),
             ]);
+            return {
+              ...p,
+              sections: p.sections.filter((s) => !toDelete.has(s.id)),
+            };
+          }),
+        }));
+      },
+
+      deleteSections: (projectId, sectionIds) => {
+        if (sectionIds.length === 0) return;
+        set((state) => ({
+          projects: updateProjectInList(state.projects, projectId, (p) => {
+            const toDelete = new Set<string>();
+            for (const sectionId of sectionIds) {
+              toDelete.add(sectionId);
+              for (const id of getDescendantIds(p.sections, sectionId)) {
+                toDelete.add(id);
+              }
+            }
             return {
               ...p,
               sections: p.sections.filter((s) => !toDelete.has(s.id)),

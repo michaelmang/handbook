@@ -109,3 +109,167 @@ body {
   color: var(--accent, #1e3a5f);
   text-decoration: underline;
 }
+
+/* docx-preview — ensure natural text selection */
+.docx-preview-styles {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.docx-preview-root {
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: auto;
+  min-height: 11in;
+}
+
+.docx-preview-root .docx-wrapper {
+  user-select: text;
+  -webkit-user-select: text;
+  background: #ffffff;
+  padding: 0;
+}
+
+.docx-preview-root * {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Preserve Word list / outline numbering from docx-preview */
+.docx-preview-root .docx-wrapper p[class*="docx-num-"] {
+  display: list-item !important;
+  list-style-position: inside;
+}
+
+.docx-preview-root .docx-wrapper p[class*="docx-num-"]::before {
+  display: inline;
+  white-space: pre;
+}
+
+.docx-preview-root p.docx-section-highlight {
+  box-shadow: inset calc(4px + var(--section-level, 0) * 14px) 0 0
+    var(--section-accent, #94a3b8);
+  background-color: color-mix(
+    in srgb,
+    var(--section-accent, #94a3b8) 7%,
+    transparent
+  );
+}
+
+.docx-preview-root p.docx-section-boundary {
+  background-color: color-mix(
+    in srgb,
+    var(--section-accent, #94a3b8) 14%,
+    transparent
+  );
+  font-weight: 500;
+}
+
+/* Legacy mammoth document styles (fallback) */
+.docx-document {
+  background: #ffffff;
+  color: #000000;
+  font-family: "Times New Roman", Times, Georgia, serif;
+  font-size: 12pt;
+  line-height: 1.35;
+}
+
+.docx-document-body {
+  padding: 1in 1.25in;
+  min-height: 11in;
+}
+
+.docx-document h1,
+.docx-document-body h1 {
+  font-size: 16pt;
+  font-weight: 700;
+  margin: 18pt 0 6pt;
+  color: #000;
+}
+
+.docx-document h2,
+.docx-document-body h2 {
+  font-size: 14pt;
+  font-weight: 700;
+  margin: 14pt 0 6pt;
+  color: #000;
+}
+
+.docx-document h3,
+.docx-document h4,
+.docx-document h5,
+.docx-document h6,
+.docx-document-body h3,
+.docx-document-body h4,
+.docx-document-body h5,
+.docx-document-body h6 {
+  font-size: 12pt;
+  font-weight: 700;
+  margin: 12pt 0 4pt;
+  color: #000;
+}
+
+.docx-document p,
+.docx-document-body p {
+  margin: 0 0 8pt;
+}
+
+.docx-document ul,
+.docx-document ol,
+.docx-document-body ul,
+.docx-document-body ol {
+  margin: 0 0 8pt;
+  padding-left: 0.5in;
+}
+
+.docx-document li,
+.docx-document-body li {
+  margin-bottom: 4pt;
+}
+
+.docx-document table,
+.docx-document-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8pt 0;
+  font-size: 11pt;
+}
+
+.docx-document th,
+.docx-document td,
+.docx-document-body th,
+.docx-document-body td {
+  border: 1px solid #000;
+  padding: 4pt 6pt;
+  vertical-align: top;
+}
+
+.docx-document strong,
+.docx-document b,
+.docx-document-body strong,
+.docx-document-body b {
+  font-weight: 700;
+}
+
+.docx-document em,
+.docx-document i,
+.docx-document-body em,
+.docx-document-body i {
+  font-style: italic;
+}
+
+.docx-document a,
+.docx-document-body a {
+  color: #0563c1;
+  text-decoration: underline;
+}
+
+.docx-document img,
+.docx-document-body img {
+  max-width: 100%;
+  height: auto;
+}

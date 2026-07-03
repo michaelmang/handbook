@@ -20,8 +20,9 @@ import { CSS } from "@dnd-kit/utilities";
 import { useProject, useProjectsStore } from "@/lib/store";
 import type { Section } from "@/lib/types";
 import { organizeProject } from "@/lib/project-utils";
-import { isContainerSection, moveBlockInFlatList } from "@/lib/section-tree";
+import { isContainerSection, getDescendantIds, moveBlockInFlatList } from "@/lib/section-tree";
 import { ImportPanel } from "./ImportPanel";
+import { SectionEditorModal } from "./SectionEditorModal";
 
 interface OrganizePanelProps {
   projectId: string;
@@ -32,6 +33,7 @@ export function OrganizePanel({ projectId }: OrganizePanelProps) {
     addContainerSection,
     updateSection,
     deleteSection,
+    deleteSections,
     applyFlatStructure,
     indentSection,
     outdentSection,
@@ -41,6 +43,9 @@ export function OrganizePanel({ projectId }: OrganizePanelProps) {
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [newGroupTitle, setNewGroupTitle] = useState("");
   const [showAddGroup, setShowAddGroup] = useState(false);
+  const [importParentId, setImportParentId] = useState<string | null>(null);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -75,9 +80,52 @@ export function OrganizePanel({ projectId }: OrganizePanelProps) {
     setShowAddGroup(false);
   };
 
+  const exitSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelected = (sectionId: string) => {
+    if (!project) return;
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      const descendants = getDescendantIds(project.sections, sectionId);
+      if (next.has(sectionId)) {
+        next.delete(sectionId);
+        for (const id of descendants) next.delete(id);
+      } else {
+        next.add(sectionId);
+        for (const id of descendants) next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const selectAllSections = () => {
+    setSelectedIds(new Set(flatItems.map((i) => i.section.id)));
+  };
+
+  const handleBulkDelete = () => {
+    const count = selectedIds.size;
+    if (count === 0) return;
+    if (
+      !confirm(
+        `Delete ${count} selected section(s)? Nested items under selected groups are included.`
+      )
+    ) {
+      return;
+    }
+    deleteSections(projectId, Array.from(selectedIds));
+    exitSelectionMode();
+  };
+
   const editingSectionData = editingSection
     ? project.sections.find((s) => s.id === editingSection)
     : null;
+
+  const containerGroups = project.sections.filter((s) =>
+    isContainerSection(s)
+  );
 
   return (
     <div className="grid gap-8 lg:grid-cols-2">
@@ -85,21 +133,86 @@ export function OrganizePanel({ projectId }: OrganizePanelProps) {
         <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-stone-500">
           Import sections
         </h3>
-        <ImportPanel projectId={projectId} />
+        {containerGroups.length > 0 && (
+          <div className="mb-3">
+            <label className="text-xs font-medium text-stone-600">
+              Import into
+            </label>
+            <select
+              value={importParentId ?? ""}
+              onChange={(e) =>
+                setImportParentId(e.target.value ? e.target.value : null)
+              }
+              className="mt-1 w-full rounded-lg border border-stone-200 px-3 py-1.5 text-sm focus:border-stone-400 focus:outline-none"
+            >
+              <option value="">Top level</option>
+              {containerGroups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.title}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        <ImportPanel projectId={projectId} parentId={importParentId} />
       </div>
 
       <div>
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
             Structure ({project.sections.length} items)
           </h3>
-          <button
-            onClick={() => setShowAddGroup(true)}
-            className="text-xs font-medium text-stone-600 hover:text-stone-900"
-          >
-            + Add group
-          </button>
+          <div className="flex items-center gap-2">
+            {flatItems.length > 0 && (
+              <button
+                onClick={() =>
+                  selectionMode ? exitSelectionMode() : setSelectionMode(true)
+                }
+                className={`text-xs font-medium ${
+                  selectionMode
+                    ? "text-stone-900"
+                    : "text-stone-600 hover:text-stone-900"
+                }`}
+              >
+                {selectionMode ? "Done" : "Select"}
+              </button>
+            )}
+            <button
+              onClick={() => setShowAddGroup(true)}
+              className="text-xs font-medium text-stone-600 hover:text-stone-900"
+            >
+              + Add group
+            </button>
+          </div>
         </div>
+
+        {selectionMode && flatItems.length > 0 && (
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2">
+            <span className="text-xs text-stone-600">
+              {selectedIds.size} selected
+            </span>
+            <button
+              onClick={selectAllSections}
+              className="text-xs font-medium text-stone-600 hover:text-stone-900"
+            >
+              Select all
+            </button>
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              disabled={selectedIds.size === 0}
+              className="text-xs font-medium text-stone-600 hover:text-stone-900 disabled:opacity-40"
+            >
+              Clear
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              disabled={selectedIds.size === 0}
+              className="ml-auto rounded-md bg-red-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-40"
+            >
+              Delete selected
+            </button>
+          </div>
+        )}
 
         <p className="mb-3 text-xs text-stone-500">
           Numbers are generated from position — never typed manually. Drag to
@@ -153,6 +266,9 @@ export function OrganizePanel({ projectId }: OrganizePanelProps) {
                   <SortableSectionRow
                     key={item.section.id}
                     item={item}
+                    selectionMode={selectionMode}
+                    selected={selectedIds.has(item.section.id)}
+                    onToggleSelected={() => toggleSelected(item.section.id)}
                     onEdit={() => setEditingSection(item.section.id)}
                     onToggleIncluded={() =>
                       updateSection(projectId, item.section.id, {
@@ -187,6 +303,7 @@ export function OrganizePanel({ projectId }: OrganizePanelProps) {
       {editingSectionData && (
         <SectionEditorModal
           section={editingSectionData}
+          accentColor={project.branding.accentColor}
           onSave={(title, markdownContent) => {
             updateSection(projectId, editingSectionData.id, {
               title,
@@ -203,6 +320,9 @@ export function OrganizePanel({ projectId }: OrganizePanelProps) {
 
 function SortableSectionRow({
   item,
+  selectionMode,
+  selected,
+  onToggleSelected,
   onEdit,
   onToggleIncluded,
   onDelete,
@@ -211,6 +331,9 @@ function SortableSectionRow({
   onRename,
 }: {
   item: { section: Section; depth: number; number: string };
+  selectionMode: boolean;
+  selected: boolean;
+  onToggleSelected: () => void;
   onEdit: () => void;
   onToggleIncluded: () => void;
   onDelete: () => void;
@@ -242,17 +365,34 @@ function SortableSectionRow({
       ref={setNodeRef}
       style={style}
       className={`flex items-center gap-1.5 rounded-lg border py-2 pr-2 ${
-        isContainer
-          ? "border-stone-200 bg-stone-100"
-          : section.included
-            ? "border-stone-200 bg-white"
-            : "border-stone-100 bg-stone-50"
+        selected
+          ? "border-stone-400 bg-stone-100 ring-1 ring-stone-300"
+          : isContainer
+            ? "border-stone-200 bg-stone-100"
+            : section.included
+              ? "border-stone-200 bg-white"
+              : "border-stone-100 bg-stone-50"
       }`}
     >
+      {selectionMode && (
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggleSelected}
+          className="ml-2 h-3.5 w-3.5 shrink-0 rounded border-stone-300 text-stone-800 focus:ring-stone-400"
+          aria-label={`Select ${section.title}`}
+        />
+      )}
+
       <button
         {...attributes}
         {...listeners}
-        className="cursor-grab pl-2 text-stone-300 hover:text-stone-500 active:cursor-grabbing"
+        disabled={selectionMode}
+        className={`pl-2 text-stone-300 ${
+          selectionMode
+            ? "cursor-default opacity-30"
+            : "cursor-grab hover:text-stone-500 active:cursor-grabbing"
+        }`}
         aria-label="Drag to reorder"
       >
         <GripIcon />
@@ -315,63 +455,6 @@ function SortableSectionRow({
         >
           ×
         </button>
-      </div>
-    </div>
-  );
-}
-
-function SectionEditorModal({
-  section,
-  onSave,
-  onClose,
-}: {
-  section: Section;
-  onSave: (title: string, markdown: string) => void;
-  onClose: () => void;
-}) {
-  const [title, setTitle] = useState(section.title);
-  const [markdown, setMarkdown] = useState(section.markdownContent);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
-        <h3 className="text-lg font-semibold text-stone-900">Edit section</h3>
-        <div className="mt-4 space-y-4">
-          <div>
-            <label className="text-sm font-medium text-stone-700">Title</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:border-stone-400 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-stone-700">
-              Markdown content
-            </label>
-            <textarea
-              value={markdown}
-              onChange={(e) => setMarkdown(e.target.value)}
-              rows={16}
-              className="mt-1 w-full rounded-lg border border-stone-200 px-3 py-2 font-mono text-sm focus:border-stone-400 focus:outline-none"
-            />
-          </div>
-        </div>
-        <div className="mt-6 flex justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-stone-200 px-4 py-2 text-sm text-stone-600 hover:bg-stone-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => onSave(title, markdown)}
-            className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800"
-          >
-            Save
-          </button>
-        </div>
       </div>
     </div>
   );

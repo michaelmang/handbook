@@ -25,5 +25,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Unit tests
+        run: npm run generate:samples && npm run test
+
       - name: Build
         run: npm run build

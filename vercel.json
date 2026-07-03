@@ -6,6 +6,10 @@
     },
     "src/app/api/export/docx/route.ts": {
       "maxDuration": 30
+    },
+    "src/app/api/import/docx/route.ts": {
+      "maxDuration": 60,
+      "memory": 1024
     }
   }
 }
